@@ -507,9 +507,9 @@ void config_timer()
     cli();
     TCCR1A = 0; //
     TCCR1B = 0;
-    TCCR1B |= (1 << WGM12);// CTC top OCR1A
-    TCCR1B |= (1 << CS11); //Prescaler 8
-    TIMSK1 |= (1 << OCIE1A); //Timer Output Compare A Match Interrupt Enable
+    TCCR1B |= (1 << WGM12);
+    TCCR1B |= (1 << CS11);
+    TIMSK1 |= (1 << OCIE1A);
     */
     sei();
 }
@@ -525,7 +525,7 @@ void nextChannel(uint8_t skip)
 
 void binding()
 {
-    jumper2 = 1;// ALWAYS BIND bind_jumper();
+    jumper2 = bind_jumper();
     while (1) {
         if (jumper2 == 0) { //bind complete or no bind
             uint8_t i;
@@ -552,14 +552,10 @@ void binding()
             int adr = 100;
             EEPROM.write(adr + 101, count);
             getBind();
-            pinMode(sigPin,OUTPUT);
             while (1) {
                 //LED_ON;
-                
-                digitalWrite(sigPin,HIGH);
                 delay(500);
                 //LED_OFF;
-                digitalWrite(sigPin,LOW);
                 delay(500);
             }
         }

@@ -21,13 +21,13 @@
 //#define DEBUG3
 //#define DEBUG4
 //#define DEBUG5
-#define RSSI_OVER_PPM 5
+//#define RSSI_OVER_PPM 7
 
 #define FAILSAFE
 #define SPIBB
 //#define SPIHW
 #if defined SPIHW
-   // #include <SPI.h>
+    #include <SPI.h>
 #endif
 
 // Used for RSSI_OVER_PPM
@@ -44,7 +44,7 @@ const int rssi_max = -96;
 #define PPM_PulseLen 300
 #define default_servo_value 1500
 #define onState 0  //set polarity of the pulses: 1 is positive, 0 is negative
-#define sigPin 3
+#define sigPin 10
 
 #if defined(SPIBB)
     #define MO_pin 5                    //D5
@@ -178,7 +178,7 @@ void setup()
     //pinMode(Servo8_OUT, OUTPUT);    //Servo8.bind pin is set to output again.
     initialize(0);                  //data
     
-    jumper1 = 1;//PPM_jumper(); // Check the possible jumper positions for changing the receiver mode.
+    jumper1 = PPM_jumper(); // Check the possible jumper positions for changing the receiver mode.
     
     if (jumper1 == 1) {
         //initiallize default ppm values
@@ -502,15 +502,13 @@ ISR(TIMER1_COMPA_vect)
 
 void config_timer()
 {
-  /*
     OCR1A = 50 * scale;
     cli();
     TCCR1A = 0; //
     TCCR1B = 0;
-    TCCR1B |= (1 << WGM12);// CTC top OCR1A
-    TCCR1B |= (1 << CS11); //Prescaler 8
-    TIMSK1 |= (1 << OCIE1A); //Timer Output Compare A Match Interrupt Enable
-    */
+    TCCR1B |= (1 << WGM12);
+    TCCR1B |= (1 << CS11);
+    TIMSK1 |= (1 << OCIE1A);
     sei();
 }
 
@@ -525,7 +523,7 @@ void nextChannel(uint8_t skip)
 
 void binding()
 {
-    jumper2 = 1;// ALWAYS BIND bind_jumper();
+    jumper2 = bind_jumper();
     while (1) {
         if (jumper2 == 0) { //bind complete or no bind
             uint8_t i;
@@ -552,14 +550,10 @@ void binding()
             int adr = 100;
             EEPROM.write(adr + 101, count);
             getBind();
-            pinMode(sigPin,OUTPUT);
             while (1) {
                 //LED_ON;
-                
-                digitalWrite(sigPin,HIGH);
                 delay(500);
                 //LED_OFF;
-                digitalWrite(sigPin,LOW);
                 delay(500);
             }
         }
