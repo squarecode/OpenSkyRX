@@ -47,15 +47,15 @@ const int rssi_max = -96;
 #define sigPin 3
 
 #if defined(SPIBB)
-    #define MO_pin 5                    //D5
+    #define MO_pin 0                    //D5
     #define MI_pin 0                    //D6
     #define SCLK_pin 1                  //D4
     #define CS 2                        //D2
     #define GDO_pin 4                   //D3  GDO0 pin
     #define SCK_on digitalWrite(1,HIGH) //D4
     #define SCK_off digitalWrite(1,LOW) //D4
-    #define MO_on digitalWrite(5,HIGH)  //D5 
-    #define MO_off digitalWrite(5,LOW)  //D5
+    #define MO_on  digitalWrite(0,HIGH)  //D5 
+    #define MO_off  digitalWrite(0,LOW)  //D5
     #define MI_1 digitalRead(0)         //D6 input
     #define MI_0 !digitalRead(0)        //D6
     #define CS_on digitalWrite(2,HIGH)  //D2
@@ -120,6 +120,9 @@ boolean debug3 = false;
 void setup()
 {
 
+
+
+
     #if defined(SPIBB)
         pinMode(MO_pin, OUTPUT);    //SI
         pinMode(MI_pin, INPUT);     //SO
@@ -127,6 +130,7 @@ void setup()
         pinMode(CS, OUTPUT);        //CS output
         pinMode(GDO_pin, INPUT);    //GDO0 pin
         SCK_off;                    //start sck low
+        pinMode(0,OUTPUT);
         MO_off;                     //low
     #endif
     
@@ -170,8 +174,6 @@ void setup()
     #else
         #error // 8 or 16MHz only !
     #endif
-
-
 
     initialize(1);                  //binding
     binding();
@@ -372,8 +374,10 @@ void getBind(void)
         if (GDO_1) {
             ccLen = cc2500_readReg(CC2500_3B_RXBYTES | CC2500_READ_BURST) & 0x7F;
             if (ccLen) {
+              
                 cc2500_readFifo((uint8_t *)ccData, ccLen);
                 if (ccData[ccLen - 1] & 0x80) {
+                  digitalWrite(sigPin,LOW);
                     if (ccData[2] == 0x01) {
                         if (ccData[5] == 0x00) {
                             txid[0] = ccData[3];
@@ -546,7 +550,10 @@ void binding()
             break;
         } else {
             //LED_ON;
+            pinMode(sigPin,OUTPUT);
+            digitalWrite(sigPin,HIGH);
             tunning();
+             
             //count=0xC8;//for test
             cc2500_writeReg(CC2500_0C_FSCTRL0, count);
             int adr = 100;
@@ -587,7 +594,9 @@ void tunning()
             if (ccLen) {
                 cc2500_readFifo((uint8_t *)ccData, ccLen);
                 if (ccData[ccLen - 1] & 0x80) {
+                    
                     if (ccData[2] == 0x01) {
+                      
                         if (ccData[5] == 0x00) {
                             break;
                         }

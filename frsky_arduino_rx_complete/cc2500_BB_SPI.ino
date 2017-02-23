@@ -45,6 +45,7 @@ void cc2500_writeFifo(uint8_t *dpbuffer, uint8_t len)
 //--------------------------------------
 void _spi_write(uint8_t command)
 {
+  pinMode(0,OUTPUT);
     uint8_t n = 8;
     SCK_off;//SCK start low
     MO_off;
@@ -77,6 +78,7 @@ uint8_t _spi_read(void)
     uint8_t i;
     result = 0;
     for (i = 0; i < 8; i++) {
+      pinMode(0,INPUT); 
         if (MI_1) ///
             result = (result << 1) | 0x01;
         else
