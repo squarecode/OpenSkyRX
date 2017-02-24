@@ -89,7 +89,11 @@ const int rssi_max = -96;
 //#define LED_ON  PORTC |= _BV(3)
 //#define LED_OFF  PORTC &= ~_BV(3)
 #define NOP() __asm__ __volatile__("nop")
-        
+
+
+//#include <SoftwareSerial.h>
+
+//SoftwareSerial mySerial(6, 3);
 
 // Globals:
 static uint8_t ccData[27];
@@ -117,12 +121,29 @@ uint16_t c[8];
 boolean debug2 = true;
 boolean debug3 = false;
 
+void oneByteDebug(uint8_t data)
+{
+  pinMode(sigPin,OUTPUT);
+  digitalWrite(sigPin,LOW);
+  delay(1000);
+for(uint8_t i=0;i<3;i++)
+  {
+    for(uint8_t j=0;j<data%10;j++)
+    {
+      digitalWrite(sigPin,HIGH);
+      delay(400);
+      digitalWrite(sigPin,LOW);
+      delay(400);
+    }
+    data /= 10;
+    delay(1000);
+  }
+}
+
 void setup()
 {
 
-
-
-
+ // mySerial.begin(9600);
     #if defined(SPIBB)
         pinMode(MO_pin, OUTPUT);    //SI
         pinMode(MI_pin, INPUT);     //SO
@@ -175,6 +196,7 @@ void setup()
         #error // 8 or 16MHz only !
     #endif
 
+   // mySerial.println("RESET");
     initialize(1);                  //binding
     binding();
     //pinMode(Servo8_OUT, OUTPUT);    //Servo8.bind pin is set to output again.
@@ -359,6 +381,19 @@ void initialize(int bind)
     cc2500_writeReg(CC2500_0C_FSCTRL0, bind ? 0x00 : count); // Frequency offset hack
     cc2500_writeReg(CC2500_0A_CHANNR, 0x00);
 }
+
+
+void debugAry(uint8_t data[27])
+{ 
+   for(int i=0;i<27;i++)
+   {
+      //mySerial.print("[");
+      //mySerial.print(data[i],HEX);
+      //mySerial.print("] ");
+   }
+   //mySerial.println("");
+}
+
 // Receives complete bind setup
 void getBind(void)
 {
@@ -368,18 +403,36 @@ void getBind(void)
     //           len|bind |tx id|idx|h0|h1|h2|h3|h4|00|00|00|00|00|00|01
     // Start by getting bind packet 0 and the txid
     //        0  1   2  txid0(3) txid1()4    5  6  7   8  9 10 11 12 13 14 15 16 17
-    //ccdata    //11 03 01  d7       2d          00 00 1e 3c 5b 78 00 00 00 00 00 00 01
-    //11 03 01  19       3e          00 02 8e 2f bb 5c 00 00 00 00 00 00 01
+    //ccdata    
+            //11 03 01  d7       2d          00 00 1e 3c 5b 78 00 00 00 00 00 00 01
+            //11 03 01  19       3e          00 02 8e 2f bb 5c 00 00 00 00 00 00 01
     while (1) {
         if (GDO_1) {
             ccLen = cc2500_readReg(CC2500_3B_RXBYTES | CC2500_READ_BURST) & 0x7F;
             if (ccLen) {
-              
                 cc2500_readFifo((uint8_t *)ccData, ccLen);
+                /*
+                mySerial.print("len: ");
+                mySerial.println(ccLen);
+                debugAry(ccData);
+               */
                 if (ccData[ccLen - 1] & 0x80) {
-                  digitalWrite(sigPin,LOW);
+                  
                     if (ccData[2] == 0x01) {
+                      digitalWrite(sigPin,LOW);
+                     // mySerial.println("Packet valid!!!");
+                     
                         if (ccData[5] == 0x00) {
+                           while (1) {
+                                //LED_ON;
+                                
+                                digitalWrite(sigPin,HIGH);
+                                delay(100);
+                                //LED_OFF;
+                                digitalWrite(sigPin,LOW);
+                                delay(100);
+                            }
+                       //   mySerial.println("zero check passed!#########");
                             txid[0] = ccData[3];
                             txid[1] = ccData[4];
                             for (uint8_t n = 0; n < 5; n++) {
